@@ -7,7 +7,7 @@
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
 #include "FFEXCore.h"
-#include "FFEXCheat.h"
+#include "FFEXCore.h"
 
 // ══════════════════════════════════════════════════════════════
 // THEME

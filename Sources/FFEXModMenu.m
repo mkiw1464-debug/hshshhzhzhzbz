@@ -612,7 +612,7 @@ typedef NS_ENUM(NSInteger, FFEXMenuTab) {
             
             // Start expiry timer
             [self.expiryTimer invalidate];
-            __weak typeof(self) weakSelf = self;
+            __unsafe_unretained typeof(self) weakSelf = self;
             self.expiryTimer = [NSTimer scheduledTimerWithTimeInterval:60.0 repeats:YES block:^(NSTimer *t) {
                 [weakSelf updateExpiryRow:expiryView];
                 // Auto-logout check

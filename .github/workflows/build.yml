@@ -1,0 +1,90 @@
+name: FFEX IOS — Build Framework
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Versi build (contoh: v1.0.0)'
+        required: false
+        default: 'latest'
+
+jobs:
+  build:
+    name: Compile FFEX.framework (arm64)
+    runs-on: macos-14
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Select Xcode 15
+      run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+
+    - name: Cache build
+      uses: actions/cache@v4
+      with:
+        path: build/
+        key: ffex-${{ hashFiles('Sources/**') }}
+
+    - name: Compile FFEX.framework
+      run: |
+        mkdir -p build/FFEX.framework/Headers
+
+        SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+
+        clang \
+          -arch arm64 \
+          -isysroot "$SDK" \
+          -miphoneos-version-min=15.0 \
+          -Os \
+          -fvisibility=hidden \
+          -fomit-frame-pointer \
+          -dynamiclib \
+          -install_name "@rpath/FFEX.framework/FFEX" \
+          -framework Foundation \
+          -framework UIKit \
+          -framework Security \
+          -lobjc -ObjC \
+          -DFFEX_IOS=1 \
+          -DBUILD_NUMBER=${{ github.run_number }} \
+          -I Sources/ \
+          Sources/FFEXMain.m \
+          Sources/FFEXKeySystem.m \
+          Sources/FFEXAntiCheat.m \
+          Sources/FFEXCheat.m \
+          Sources/FFEXModMenu.m \
+          -o build/FFEX.framework/FFEX
+
+        cp Sources/FFEXCore.h build/FFEX.framework/Headers/
+        strip -x build/FFEX.framework/FFEX
+
+        echo "Size: $(du -sh build/FFEX.framework/FFEX | cut -f1)"
+
+    - name: Pad binary (1GB+ anti-fingerprint)
+      run: |
+        python3 - << 'EOF'
+        import os, random
+        fw      = 'build/FFEX.framework/FFEX'
+        current = os.path.getsize(fw)
+        target  = 1024 * 1024 * 1024
+        pad     = max(0, target - current)
+        chunk   = 4 * 1024 * 1024
+        if pad > 0:
+            with open(fw, 'ab') as f:
+                written = 0
+                while written < pad:
+                    n   = min(chunk, pad - written)
+                    key = random.randint(1, 255)
+                    f.write(bytes([key ^ (i & 0xFF) for i in range(n)]))
+                    written += n
+        print(f'Final: {os.path.getsize(fw)/1024**3:.2f} GB')
+        EOF
+
+    - name: Upload FFEX.framework
+      uses: actions/upload-artifact@v4
+      with:
+        name: FFEX-framework-${{ github.run_number }}
+        path: build/FFEX.framework/
+        retention-days: 30

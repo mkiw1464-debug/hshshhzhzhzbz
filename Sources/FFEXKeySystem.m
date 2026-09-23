@@ -1,5 +1,5 @@
 // FFEX IOS - Key System & Login Page
-// Intercepts Free Fire launch → shows FFEX login UI
+// Intercepts Free Fire launch â shows FFEX login UI
 // Supports: GBox, Esign, Sideloadly, AppInstaller
 // iOS 15/16/17/18/26/27 compatible
 
@@ -7,9 +7,10 @@
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
 #import <objc/message.h>
+#include <sys/utsname.h>
 #include "FFEXCore.h"
 
-// ─── Language Strings ─────────────────────────────────────────
+// âââ Language Strings âââââââââââââââââââââââââââââââââââââââââ
 typedef NS_ENUM(NSInteger, FFEXLanguage) {
     FFEXLangEnglish = 0,
     FFEXLangIndonesian,
@@ -32,90 +33,90 @@ static NSDictionary *languageStrings() {
         @"status_online": @{
             @(FFEXLangEnglish):    @"STATUS: ONLINE",
             @(FFEXLangIndonesian): @"STATUS: ONLINE",
-            @(FFEXLangVietnamese): @"TRẠNG THÁI: TRỰC TUYẾN",
+            @(FFEXLangVietnamese): @"TRáº NG THÃI: TRá»°C TUYáº¾N",
             @(FFEXLangPortuguese): @"STATUS: ONLINE",
-            @(FFEXLangChinese):    @"状态：在线",
-            @(FFEXLangArabic):     @"الحالة: متصل",
+            @(FFEXLangChinese):    @"ç¶æï¼å¨çº¿",
+            @(FFEXLangArabic):     @"Ø§ÙØ­Ø§ÙØ©: ÙØªØµÙ",
         },
         @"status_offline": @{
             @(FFEXLangEnglish):    @"STATUS: OFFLINE",
             @(FFEXLangIndonesian): @"STATUS: OFFLINE",
-            @(FFEXLangVietnamese): @"TRẠNG THÁI: NGOẠI TUYẾN",
+            @(FFEXLangVietnamese): @"TRáº NG THÃI: NGOáº I TUYáº¾N",
             @(FFEXLangPortuguese): @"STATUS: OFFLINE",
-            @(FFEXLangChinese):    @"状态：离线",
-            @(FFEXLangArabic):     @"الحالة: غير متصل",
+            @(FFEXLangChinese):    @"ç¶æï¼ç¦»çº¿",
+            @(FFEXLangArabic):     @"Ø§ÙØ­Ø§ÙØ©: ØºÙØ± ÙØªØµÙ",
         },
         @"enter_key": @{
             @(FFEXLangEnglish):    @"ENTER LICENSE KEY",
             @(FFEXLangIndonesian): @"MASUKKAN KUNCI LISENSI",
-            @(FFEXLangVietnamese): @"NHẬP KHÓA BẢN QUYỀN",
-            @(FFEXLangPortuguese): @"INSERIR CHAVE DE LICENÇA",
-            @(FFEXLangChinese):    @"输入授权密钥",
-            @(FFEXLangArabic):     @"أدخل مفتاح الترخيص",
+            @(FFEXLangVietnamese): @"NHáº¬P KHÃA Báº¢N QUYá»N",
+            @(FFEXLangPortuguese): @"INSERIR CHAVE DE LICENÃA",
+            @(FFEXLangChinese):    @"è¾å¥ææå¯é¥",
+            @(FFEXLangArabic):     @"Ø£Ø¯Ø®Ù ÙÙØªØ§Ø­ Ø§ÙØªØ±Ø®ÙØµ",
         },
         @"login": @{
             @(FFEXLangEnglish):    @"LOGIN",
             @(FFEXLangIndonesian): @"MASUK",
-            @(FFEXLangVietnamese): @"ĐĂNG NHẬP",
+            @(FFEXLangVietnamese): @"ÄÄNG NHáº¬P",
             @(FFEXLangPortuguese): @"ENTRAR",
-            @(FFEXLangChinese):    @"登录",
-            @(FFEXLangArabic):     @"تسجيل الدخول",
+            @(FFEXLangChinese):    @"ç»å½",
+            @(FFEXLangArabic):     @"ØªØ³Ø¬ÙÙ Ø§ÙØ¯Ø®ÙÙ",
         },
         @"key_valid": @{
-            @(FFEXLangEnglish):    @"KEY VERIFIED ✓",
-            @(FFEXLangIndonesian): @"KUNCI TERVERIFIKASI ✓",
-            @(FFEXLangVietnamese): @"KHÓA HỢP LỆ ✓",
-            @(FFEXLangPortuguese): @"CHAVE VERIFICADA ✓",
-            @(FFEXLangChinese):    @"密钥已验证 ✓",
-            @(FFEXLangArabic):     @"تم التحقق من المفتاح ✓",
+            @(FFEXLangEnglish):    @"KEY VERIFIED â",
+            @(FFEXLangIndonesian): @"KUNCI TERVERIFIKASI â",
+            @(FFEXLangVietnamese): @"KHÃA Há»¢P Lá» â",
+            @(FFEXLangPortuguese): @"CHAVE VERIFICADA â",
+            @(FFEXLangChinese):    @"å¯é¥å·²éªè¯ â",
+            @(FFEXLangArabic):     @"ØªÙ Ø§ÙØªØ­ÙÙ ÙÙ Ø§ÙÙÙØªØ§Ø­ â",
         },
         @"key_invalid": @{
             @(FFEXLangEnglish):    @"INVALID KEY",
             @(FFEXLangIndonesian): @"KUNCI TIDAK VALID",
-            @(FFEXLangVietnamese): @"KHÓA KHÔNG HỢP LỆ",
-            @(FFEXLangPortuguese): @"CHAVE INVÁLIDA",
-            @(FFEXLangChinese):    @"无效密钥",
-            @(FFEXLangArabic):     @"مفتاح غير صالح",
+            @(FFEXLangVietnamese): @"KHÃA KHÃNG Há»¢P Lá»",
+            @(FFEXLangPortuguese): @"CHAVE INVÃLIDA",
+            @(FFEXLangChinese):    @"æ æå¯é¥",
+            @(FFEXLangArabic):     @"ÙÙØªØ§Ø­ ØºÙØ± ØµØ§ÙØ­",
         },
         @"installing_assets": @{
             @(FFEXLangEnglish):    @"INSTALLING ASSETS...",
             @(FFEXLangIndonesian): @"MEMASANG ASET...",
-            @(FFEXLangVietnamese): @"ĐANG CÀI ĐẶT TÀI NGUYÊN...",
+            @(FFEXLangVietnamese): @"ÄANG CÃI Äáº¶T TÃI NGUYÃN...",
             @(FFEXLangPortuguese): @"INSTALANDO ATIVOS...",
-            @(FFEXLangChinese):    @"正在安装资源...",
-            @(FFEXLangArabic):     @"جارٍ تثبيت الأصول...",
+            @(FFEXLangChinese):    @"æ­£å¨å®è£èµæº...",
+            @(FFEXLangArabic):     @"Ø¬Ø§Ø±Ù ØªØ«Ø¨ÙØª Ø§ÙØ£ØµÙÙ...",
         },
         @"installing_anticheat": @{
             @(FFEXLangEnglish):    @"INSTALLING ANTICHEAT BYPASS...",
             @(FFEXLangIndonesian): @"MEMASANG BYPASS ANTICHEAT...",
-            @(FFEXLangVietnamese): @"ĐANG CÀI BYPASS ANTICHEAT...",
+            @(FFEXLangVietnamese): @"ÄANG CÃI BYPASS ANTICHEAT...",
             @(FFEXLangPortuguese): @"INSTALANDO BYPASS ANTICHEAT...",
-            @(FFEXLangChinese):    @"正在安装反作弊绕过...",
-            @(FFEXLangArabic):     @"جارٍ تثبيت تجاوز مكافحة الغش...",
+            @(FFEXLangChinese):    @"æ­£å¨å®è£åä½å¼ç»è¿...",
+            @(FFEXLangArabic):     @"Ø¬Ø§Ø±Ù ØªØ«Ø¨ÙØª ØªØ¬Ø§ÙØ² ÙÙØ§ÙØ­Ø© Ø§ÙØºØ´...",
         },
         @"loading_ff": @{
             @(FFEXLangEnglish):    @"LOADING FREE FIRE...",
             @(FFEXLangIndonesian): @"MEMUAT FREE FIRE...",
-            @(FFEXLangVietnamese): @"ĐANG TẢI FREE FIRE...",
+            @(FFEXLangVietnamese): @"ÄANG Táº¢I FREE FIRE...",
             @(FFEXLangPortuguese): @"CARREGANDO FREE FIRE...",
-            @(FFEXLangChinese):    @"正在加载自由之火...",
-            @(FFEXLangArabic):     @"جارٍ تحميل فري فاير...",
+            @(FFEXLangChinese):    @"æ­£å¨å è½½èªç±ä¹ç«...",
+            @(FFEXLangArabic):     @"Ø¬Ø§Ø±Ù ØªØ­ÙÙÙ ÙØ±Ù ÙØ§ÙØ±...",
         },
         @"channel": @{
             @(FFEXLangEnglish):    @"CHANNEL: t.me/ffexternal",
             @(FFEXLangIndonesian): @"SALURAN: t.me/ffexternal",
-            @(FFEXLangVietnamese): @"KÊNH: t.me/ffexternal",
+            @(FFEXLangVietnamese): @"KÃNH: t.me/ffexternal",
             @(FFEXLangPortuguese): @"CANAL: t.me/ffexternal",
-            @(FFEXLangChinese):    @"频道：t.me/ffexternal",
-            @(FFEXLangArabic):     @"القناة: t.me/ffexternal",
+            @(FFEXLangChinese):    @"é¢éï¼t.me/ffexternal",
+            @(FFEXLangArabic):     @"Ø§ÙÙÙØ§Ø©: t.me/ffexternal",
         },
         @"expired": @{
-            @(FFEXLangEnglish):    @"KEY EXPIRED — PLEASE RENEW",
-            @(FFEXLangIndonesian): @"KUNCI KADALUARSA — HARAP PERBARUI",
-            @(FFEXLangVietnamese): @"KHÓA HẾT HẠN — VUI LÒNG GIA HẠN",
-            @(FFEXLangPortuguese): @"CHAVE EXPIRADA — RENOVE",
-            @(FFEXLangChinese):    @"密钥已过期 — 请续期",
-            @(FFEXLangArabic):     @"انتهت صلاحية المفتاح — يرجى التجديد",
+            @(FFEXLangEnglish):    @"KEY EXPIRED â PLEASE RENEW",
+            @(FFEXLangIndonesian): @"KUNCI KADALUARSA â HARAP PERBARUI",
+            @(FFEXLangVietnamese): @"KHÃA Háº¾T Háº N â VUI LÃNG GIA Háº N",
+            @(FFEXLangPortuguese): @"CHAVE EXPIRADA â RENOVE",
+            @(FFEXLangChinese):    @"å¯é¥å·²è¿æ â è¯·ç»­æ",
+            @(FFEXLangArabic):     @"Ø§ÙØªÙØª ØµÙØ§Ø­ÙØ© Ø§ÙÙÙØªØ§Ø­ â ÙØ±Ø¬Ù Ø§ÙØªØ¬Ø¯ÙØ¯",
         },
     };
 }
@@ -128,17 +129,17 @@ static NSString *L(NSString *key, FFEXLanguage lang) {
     return s ?: entry[@(FFEXLangEnglish)] ?: key;
 }
 
-// ─── Persistent Storage Keys ──────────────────────────────────
+// âââ Persistent Storage Keys ââââââââââââââââââââââââââââââââââ
 #define FFEX_KEY_STORAGE     @"ffex_license_key"
 #define FFEX_LANG_STORAGE    @"ffex_language"
 #define FFEX_EXPIRY_STORAGE  @"ffex_expiry_ts"
 #define FFEX_CREATED_STORAGE @"ffex_created_ts"
 
-// ─── API ──────────────────────────────────────────────────────
+// âââ API ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 static NSString *const kFFEXApiBase = @"https://ffexxxx.vercel.app/app/api/licenses/validate";
 static NSString *const kTelegramChannel = @"https://t.me/ffexternal";
 
-// ─── Status Colors ────────────────────────────────────────────
+// âââ Status Colors ââââââââââââââââââââââââââââââââââââââââââââ
 static UIColor *colorGreen()  { return [UIColor colorWithRed:0 green:1 blue:0.4 alpha:1]; }
 static UIColor *colorRed()    { return [UIColor colorWithRed:1 green:0.2 blue:0.2 alpha:1]; }
 static UIColor *colorGold()   { return [UIColor colorWithRed:1 green:0.84 blue:0 alpha:1]; }
@@ -146,7 +147,7 @@ static UIColor *colorBg()     { return [UIColor colorWithRed:0.04 green:0.04 blu
 static UIColor *colorPanel()  { return [UIColor colorWithRed:0.08 green:0.08 blue:0.14 alpha:0.95]; }
 static UIColor *colorAccent() { return [UIColor colorWithRed:0.2 green:0.6 blue:1 alpha:1]; }
 
-// ─── FFEX Login View Controller ───────────────────────────────
+// âââ FFEX Login View Controller âââââââââââââââââââââââââââââââ
 @interface FFEXLoginViewController : UIViewController
 @property (nonatomic, assign) FFEXLanguage currentLang;
 @property (nonatomic, strong) UILabel *titleLabel;
@@ -204,7 +205,7 @@ static UIColor *colorAccent() { return [UIColor colorWithRed:0.2 green:0.6 blue:
     CGFloat panelX = (W - panelW) / 2;
     CGFloat y = 40.0;
     
-    // ── FFEX IOS Title ──
+    // ââ FFEX IOS Title ââ
     self.titleLabel = [UILabel new];
     self.titleLabel.text = @"FFEX IOS";
     self.titleLabel.textColor = colorGold();
@@ -214,7 +215,7 @@ static UIColor *colorAccent() { return [UIColor colorWithRed:0.2 green:0.6 blue:
     [self.view addSubview:self.titleLabel];
     y += 50;
 
-    // ── Language Selector ──
+    // ââ Language Selector ââ
     NSArray *langs = @[@"EN", @"ID", @"VI", @"PT", @"CN", @"AR"];
     self.langSelector = [[UISegmentedControl alloc] initWithItems:langs];
     self.langSelector.selectedSegmentIndex = self.currentLang;
@@ -229,7 +230,7 @@ static UIColor *colorAccent() { return [UIColor colorWithRed:0.2 green:0.6 blue:
     [self.view addSubview:self.langSelector];
     y += 44;
     
-    // ── Panel ──
+    // ââ Panel ââ
     UIView *panel = [[UIView alloc] initWithFrame:CGRectMake(panelX, y, panelW, 300)];
     panel.backgroundColor = colorPanel();
     panel.layer.cornerRadius = 12;
@@ -410,7 +411,7 @@ static UIColor *colorAccent() { return [UIColor colorWithRed:0.2 green:0.6 blue:
 - (void)showOfflineMode {
     NSString *savedKey = [[NSUserDefaults standardUserDefaults] stringForKey:FFEX_KEY_STORAGE];
     if (savedKey.length > 0) {
-        // Offline + saved key → disable input, show saved
+        // Offline + saved key â disable input, show saved
         self.keyField.text = savedKey;
         self.keyField.enabled = NO;
         self.keyField.alpha = 0.6;
@@ -480,7 +481,7 @@ static UIColor *colorAccent() { return [UIColor colorWithRed:0.2 green:0.6 blue:
     if (key.length == 0) return;
     
     if (!self.isOnline) {
-        // Offline mode — check saved key
+        // Offline mode â check saved key
         NSString *savedKey = [[NSUserDefaults standardUserDefaults] stringForKey:FFEX_KEY_STORAGE];
         if ([savedKey isEqualToString:key]) {
             NSTimeInterval expiry = [[NSUserDefaults standardUserDefaults] doubleForKey:FFEX_EXPIRY_STORAGE];
@@ -492,7 +493,7 @@ static UIColor *colorAccent() { return [UIColor colorWithRed:0.2 green:0.6 blue:
                 return;
             }
         }
-        // No saved valid key and offline → show error
+        // No saved valid key and offline â show error
         [self showBanner:L(@"key_invalid", self.currentLang) color:colorRed()];
         return;
     }
@@ -607,7 +608,7 @@ static UIColor *colorAccent() { return [UIColor colorWithRed:0.2 green:0.6 blue:
 
 - (void)runLoadingStep:(NSInteger)idx steps:(NSArray *)steps {
     if (idx >= steps.count) {
-        // Done → launch Free Fire
+        // Done â launch Free Fire
         [self launchFreeFire];
         return;
     }
@@ -627,7 +628,7 @@ static UIColor *colorAccent() { return [UIColor colorWithRed:0.2 green:0.6 blue:
 }
 
 - (void)launchFreeFire {
-    // Dismiss login UI → hand control back to original game AppDelegate
+    // Dismiss login UI â hand control back to original game AppDelegate
     // The cheat hooks are already installed; we just dismiss this VC
     self.progressContainer.hidden = YES;
     
@@ -683,7 +684,7 @@ static UIColor *colorAccent() { return [UIColor colorWithRed:0.2 green:0.6 blue:
 
 @end
 
-// ─── App Delegate Hook ────────────────────────────────────────
+// âââ App Delegate Hook ââââââââââââââââââââââââââââââââââââââââ
 // Intercept didFinishLaunchingWithOptions to show login FIRST
 @interface FFEXAppDelegateHook : NSObject
 @end

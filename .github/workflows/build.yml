@@ -65,25 +65,6 @@ jobs:
 
         echo "Size: $(du -sh build/FFEX.framework/FFEX | cut -f1)"
 
-    - name: Pad binary (1GB+ anti-fingerprint)
-      run: |
-        python3 - << 'EOF'
-        import os, random
-        fw      = 'build/FFEX.framework/FFEX'
-        current = os.path.getsize(fw)
-        target  = 1024 * 1024 * 1024
-        pad     = max(0, target - current)
-        chunk   = 4 * 1024 * 1024
-        if pad > 0:
-            with open(fw, 'ab') as f:
-                written = 0
-                while written < pad:
-                    n   = min(chunk, pad - written)
-                    key = random.randint(1, 255)
-                    f.write(bytes([key ^ (i & 0xFF) for i in range(n)]))
-                    written += n
-        print(f'Final: {os.path.getsize(fw)/1024**3:.2f} GB')
-        EOF
 
     - name: Upload FFEX.framework
       uses: actions/upload-artifact@v4

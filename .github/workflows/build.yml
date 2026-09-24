@@ -28,14 +28,6 @@ jobs:
         path: build/
         key: ffex-${{ hashFiles('Sources/**') }}
 
-    - name: Find clang builtins
-      run: |
-        SDK=$(xcrun --sdk iphoneos --show-sdk-path)
-        CLANG_VER=$(clang --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-        RT_LIB=$(find /Applications/Xcode_15.4.app -name "libclang_rt.builtins-arm64.a" 2>/dev/null | head -1)
-        echo "RT_LIB=$RT_LIB" >> $GITHUB_ENV
-        echo "Found: $RT_LIB"
-
     - name: Compile FFEX.framework
       run: |
         mkdir -p build/FFEX.framework/Headers
@@ -59,7 +51,6 @@ jobs:
           -framework CoreFoundation \
           -lobjc -ObjC \
           -DFFEX_IOS=1 \
-          "$RT_LIB" \
           -DBUILD_NUMBER=${{ github.run_number }} \
           -I Sources/ \
           Sources/FFEXMain.m \

@@ -7,7 +7,35 @@
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
 #include "FFEXCore.h"
+#import <objc/runtime.h>
+
+// ─── UISegmentedControl category — handle segment change ─────
+@interface UISegmentedControl (FFEXCallback)
+- (void)ffex_segChanged:(UISegmentedControl *)sender;
+@end
+
+@implementation UISegmentedControl (FFEXCallback)
+- (void)ffex_segChanged:(UISegmentedControl *)sender {
+    void (^cb)(NSInteger) = objc_getAssociatedObject(sender, "ffex_cb");
+    if (cb) cb(sender.selectedSegmentIndex);
+}
+@end
+
 #include "FFEXCore.h"
+#import <objc/runtime.h>
+
+// ─── UISegmentedControl category — handle segment change ─────
+@interface UISegmentedControl (FFEXCallback)
+- (void)ffex_segChanged:(UISegmentedControl *)sender;
+@end
+
+@implementation UISegmentedControl (FFEXCallback)
+- (void)ffex_segChanged:(UISegmentedControl *)sender {
+    void (^cb)(NSInteger) = objc_getAssociatedObject(sender, "ffex_cb");
+    if (cb) cb(sender.selectedSegmentIndex);
+}
+@end
+
 
 // ══════════════════════════════════════════════════════════════
 // THEME
@@ -671,10 +699,14 @@ typedef NS_ENUM(NSInteger, FFEXMenuTab) {
     seg.selectedSegmentTintColor = MM_ACCENT_COLOR;
     [seg setTitleTextAttributes:@{NSForegroundColorAttributeName: [UIColor whiteColor], NSFontAttributeName: [UIFont systemFontOfSize:9]} forState:UIControlStateNormal];
     [seg setTitleTextAttributes:@{NSForegroundColorAttributeName: [UIColor blackColor], NSFontAttributeName: [UIFont boldSystemFontOfSize:9]} forState:UIControlStateSelected];
-    void (^cb)(NSInteger) = onChange;
-    [seg addActionForTarget:^(UIAction *a) {
-        cb(seg.selectedSegmentIndex);
-    } forEvent:UIControlEventValueChanged];
+    // Simpan callback dalam associated object, trigger via addTarget standard
+    objc_setAssociatedObject(seg,
+        "ffex_cb",
+        [onChange copy],
+        OBJC_ASSOCIATION_COPY_NONATOMIC);
+    [seg addTarget:seg
+            action:@selector(ffex_segChanged:)
+  forControlEvents:UIControlEventValueChanged];
     [v addSubview:seg];
     UIView *sep = [[UIView alloc] initWithFrame:CGRectMake(8, 49, v.bounds.size.width-16, 0.5)];
     sep.backgroundColor = MM_SEPARATOR_COLOR;

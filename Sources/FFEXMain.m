@@ -21,7 +21,7 @@
 //       FFEX.framework/          ← our cheat framework
 //         FFEX                   ← Mach-O dylib
 //     FreeFire (binary)          ← Load cmd LC_LOAD_DYLIB added:
-//                                    @rpath/FFEX.framework/FFEX
+//                                    @rpath/FFEX.dylib
 //
 // Tools to do this:
 //   - insert_dylib / optool: adds LC_LOAD_DYLIB to FreeFire binary

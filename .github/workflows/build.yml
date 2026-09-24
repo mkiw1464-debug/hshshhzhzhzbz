@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    name: Compile FFEX.framework (arm64)
+    name: Compile FFEX.dylib (arm64)
     runs-on: macos-14
 
     steps:
@@ -22,15 +22,9 @@ jobs:
     - name: Select Xcode 15
       run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
 
-    - name: Cache build
-      uses: actions/cache@v4
-      with:
-        path: build/
-        key: ffex-${{ hashFiles('Sources/**') }}
-
-    - name: Compile FFEX.framework
+    - name: Compile FFEX.dylib
       run: |
-        mkdir -p build/FFEX.framework/Headers
+        mkdir -p build
 
         SDK=$(xcrun --sdk iphoneos --show-sdk-path)
 
@@ -42,7 +36,7 @@ jobs:
           -fvisibility=hidden \
           -fomit-frame-pointer \
           -dynamiclib \
-          -install_name "@rpath/FFEX.framework/FFEX" \
+          -install_name "@rpath/FFEX.dylib" \
           -framework Foundation \
           -framework UIKit \
           -framework Security \
@@ -58,17 +52,16 @@ jobs:
           Sources/FFEXAntiCheat.m \
           Sources/FFEXCheat.m \
           Sources/FFEXModMenu.m \
-          -o build/FFEX.framework/FFEX
+          -o build/FFEX.dylib
 
-        cp Sources/FFEXCore.h build/FFEX.framework/Headers/
-        strip -x build/FFEX.framework/FFEX
+        strip -x build/FFEX.dylib
 
-        echo "Size: $(du -sh build/FFEX.framework/FFEX | cut -f1)"
+        echo "Size: $(du -sh build/FFEX.dylib | cut -f1)"
 
 
     - name: Upload FFEX.framework
       uses: actions/upload-artifact@v4
       with:
-        name: FFEX-framework-${{ github.run_number }}
-        path: build/FFEX.framework/
+        name: FFEX-dylib-${{ github.run_number }}
+        path: build/FFEX.dylib
         retention-days: 30

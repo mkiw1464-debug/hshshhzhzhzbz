@@ -146,7 +146,9 @@ static void patchFn(const char *sym, void *hook, void **orig) {
     memcpy(fn, patch, sizeof(patch));
     vm_protect(mach_task_self(), page, 0x1000, NO,
                VM_PROT_READ|VM_PROT_EXECUTE);
-    __builtin___clear_cache(fn, (char*)fn+sizeof(patch));
+    // Flush instruction cache — arm64 manual
+    __asm__ __volatile__("dsb ish" ::: "memory");
+    __asm__ __volatile__("isb" ::: "memory");
 }
 
 // ─── RAM cleaner ─────────────────────────────────────────────
